@@ -9,7 +9,7 @@ env/
 .env.*
 
 # Secrets and Tokens - VERY IMPORTANT
-client_secret_755679980004-1a5eob1dph2lhhh9vt0n2edve2d6uf37.apps.googleusercontent.com
+client_secret_755679980004-1a5eob1dph2lhhh9vt0n2edve2d6uf37.apps.googleusercontent.com.json
 client_secret.json
 token.json
 
