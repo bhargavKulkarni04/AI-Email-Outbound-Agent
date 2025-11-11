@@ -212,11 +212,11 @@ You will receive:
 - Proposed industry in <INDUSTRY>…</INDUSTRY>
 - Prior meetings (same industry) in <PREVIOUS_MEETINGS>…</PREVIOUS_MEETINGS>
 - Case studies (same industry) in <CASE_STUDIES>…</CASE_STUDIES>
-- A festival-season asset menu in <ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>…</ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
+- A festival-season asset menu in <ASSETS_TO_BE_PITCHED>…</ASSETS_TO_BE_PITCHED>
 - A jargon glossary in <JARGON_GLOSSARY>…</JARGON_GLOSSARY>
 
 # Goal
-Write a **short, personalized human-sounding festive-season cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable.
+Write a **short, personalized human-sounding upcoming winter-season cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable.As a part of this you can use the topics like winter-season , christmas and new year
 
 # Allowed Industries
 [
@@ -231,7 +231,7 @@ Write a **short, personalized human-sounding festive-season cold email** to <BRA
 
 # Methodology
 - Read <PREVIOUS_MEETINGS> and <CASE_STUDIES> to understand **this industry’s needs**, which **NBH placements** fit best, and any **ROI/outcomes** mentioned.
-- Choose relevant **festival-season assets** from <ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON> that align to the brand and the industry needs.
+- Choose relevant **festival-season assets** from <ASSETS_TO_BE_PITCHED> that align to the brand and the industry needs.
 - **Name-drops:** Use brand names that NBH has worked with in the subject and email body. Only mention brands explicitly present in <PREVIOUS_MEETINGS> or <CASE_STUDIES>. If none fit, skip name-drops. Do not include brand which belongs to the same parent company as <BRAND>
 - **Glossary & phrasing:** Translate NBH internal terms with <JARGON_GLOSSARY>.
 - Use these friendly phrases where relevant (you can also think of similar phrases, no need to stick to these):
@@ -269,7 +269,7 @@ If the industry match succeeds, output a pure JSON object with exactly:
 - **No hallucinations.** Do not invent brand names, ROI, placements, or timelines absent from inputs.
 - **Name-drops:** Only if present in <PREVIOUS_MEETINGS>/<CASE_STUDIES>. Never use the word “competitor”. Do not use brands belonging to the same parent company as <BRAND> e.g. Hotstar and JioHotstar
 - **ROI/Proof:** Mention only if present in inputs; keep it concise.
-- **Keep it short.** Target 90–150 words for the body.
+- **Keep it short.** Target 70–100 words for the body.
 
 # Final Output Constraints (Strict Rules)
 - Output must be a **pure JSON object** (no code fences, no extra commentary).
@@ -295,220 +295,176 @@ If the industry match succeeds, output a pure JSON object with exactly:
   {case_studies}
 </CASE_STUDIES>
 
-<ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
-  {{
-    "Home Goods & Electronics": [
-      "Targeted Move-in / Move-out Cohort Outreach via PAC",
-      "Festival-focused Video Pop-up Ads with festival offers or discounts",
-      "Lift Branding + Festive Gift Bag Leaflet Inserts"
-    ],
-    "Education & Training": [
-      "Sponsored cultural or festival celebration events in gated communities",
-      "PAC lead gen campaigns for seasonal courses, workshops",
-      "Festive Digital Notice Board push campaigns with early bird offers"
-    ],
-    "Manufacturing & Industrial": [
-      "Festival-themed sponsored educational content in forums",
-      "Targeted Move-in / Move-out Cohort Outreach via PAC",
-      "Lead capture video pop-ups with festival logistics planning or safety tips"
-    ],
-    "Automotive & Transportation": [
-      "Test Drive Festive Offers Campaign via PAC + Video Pop-ups",
-      "Location-Targeted Ads near competitor locations",
-      "Geo-fenced Lift Branding + Gift Bag Leaflets in Premium Societies"
-    ],
-    "Marketing, Advertising & Media": [
-      "Festival-targeted digital campaigns (PAC + Video + DNB)",
-      "Exclusive Lift & Gate Branding with festive theming",
-      "Sponsor festive events and competitions within gated societies"
-    ],
-    "Hospitality & Travel": [
-      "Festive booking promos via targeted PAC + DNB pushes",
-      "Behavioral Cohort Targeting + PAC for Festival Stays/Bookings",
-      "Gift Bag Leaflets in Premium Societies"
-    ],
-    "Apparel & Fashion": [
-      "Festive digital product launches via Video Pop-up + Discover + PAC",
-      "Lift Branding + coupon Inserts in Festival Gift Bags",
-      "Sponsor cultural festivals for social storytelling"
-    ],
-    "Jewellery": [
-      "Festival-exclusive lift branding + coupon dispensers",
-      "Video Pop-ups with festive-themed collection reveals",
-      "Participate/sponsor society festive events"
-    ],
-    "Retail": [
-      "Proximity-targeted Festival Season PAC + Discover + DNB Campaigns",
-      "Lift Branding + Leaflet Inserts in Gift Bags + Door Hanger Flyers",
-      "Pre-festival Sampling and Flea Market Stalls"
-    ],
-    "Healthcare & Wellness & Fitness": [
-      "Festival wellness camps & health check booths",
-      "Push campaigns on health supplements/product discounts",
-      "PAC + Video Pop-ups for diet/fitness coaching"
-    ],
-    "Food & Beverage / FMCG": [
-      "Opt-in & Door-to-door Sampling + Festive Gift Bag Inserts",
-      "Burst Video Pop-up + PAC campaigns during festive days",
-      "Sponsor cultural festivals and community kitchens"
-    ],
-    "Technology & Business Services": [
-      "Lead gen PAC + Festival event RSVP engagement",
-      "DNB push campaigns with festive greetings + product bundles",
-      "Sponsored gated community discussions/content"
-    ],
-    "Startups / Price-sensitive": [
-      "Festival promo Discovery + PAC + light DNB burst",
-      "Gift bag leaflet sponsorship with samples",
-      "Sponsor selected festival nights with low-cost sampling"
-    ],
-    "Beauty & Personal Care": [
-      "Festival-time opt-in product sampling + PAC + coupons",
-      "Video Pop-ups highlighting festive gift collections",
-      "Sponsor Diwali/Garba experiential booths"
-    ],
-    "E-Commerce": [
-      "Festival flash sale promos via PAC + DNB",
-      "Curated festive Discover carousels for gifting bundles",
-      "Sampling/leaflet distribution in gift bags"
-    ],
-    "Real Estate & Construction": [
-      "Mover/renovator targeting using move-in/move-out cohorts",
-      "Sponsored festival celebrations for brand goodwill",
-      "Geo-fenced video tours and Discover banners with festive discounts"
-    ],
-    "Finance & Fintech": [
-      "Festive loan/insurance offers via PAC and Video Pop-ups",
-      "Sponsored festival events + festive-themed content",
-      "DNB push campaigns with reminders"
-    ],
-    "Pets & Pet Services": [
-      "Festive pet treat sampling in gated societies",
-      "PAC + Video Pop-up on pet care promotions",
-      "Sponsor community pet events"
-    ],
-    "Membership & Local Services": [
-      "Festive sign-up drives via PAC and DNB",
-      "On-ground festival event sponsorships",
-      "Discover banners with seasonal packages"
-    ],
-    "Energy, Renewables & Mining": [
-      "Awareness & subsidy pushes via PAC and video pop-ups",
-      "Energy-safety festivals/community events",
-      "Geo-fenced Discover banners for eco-friendly offers"
-    ],
-    "Entertainment & Gaming": [
-      "Limited-time bundles via PAC + video pop-ups",
-      "Sponsored community festivals and competitions",
-      "DNB push with curated entertainment content"
-    ],
-    "Logistics & Warehousing": [
-      "Express delivery promos via PAC and DNB",
-      "Festive-themed sampling (box inserts)",
-      "Driver recognition/community goodwill festivals"
-    ],
-    "Quick Commerce": [
-      "Flash sale bursts using Video Pop-up and PAC",
-      "Sampling festive snack gift packs",
-      "DNB offer countdowns and reminders"
-    ],
-    "Education": [
-      "Festival cultural event sponsorships",
-      "PAC-based course registrations with festive discounts",
-      "DNB class/event reminders aligned to breaks"
-    ],
-    "Furniture": [
-      "On-ground festival showcases & sampling",
-      "PAC + Video Pop-up for festive discounts",
-      "Leaflet inclusion in festive gift bags"
-    ],
-    "Automotive": [
-      "Festival test drive & launch events with video and PAC",
-      "Digital geo-fencing bursts",
-      "Festival sponsorship of cultural events"
-    ],
-    "Beauty": [
-      "Opt-in sampling + festive PAC and coupons",
-      "Video Pop-ups showcasing gift sets",
-      "Sponsor Diwali/Garba experiential booths"
-    ],
-    "Robotics": [
-      "Product demos paired with PAC lead gen",
-      "Sponsored tech showcases",
-      "DNB push with festive offers"
-    ],
-    "Accounting Services": [
-      "Festival tax-planning offers via PAC and DNB",
-      "Community financial literacy events",
-      "Video Pop-ups for appointment scheduling"
-    ],
-    "Kitchenware": [
-      "Gifting bundle promos via Discover & PAC",
-      "Sampling in festive gift bags",
-      "On-ground experiential activations"
-    ],
-    "Culinary Arts": [
-      "Festival cooking contests collaboration",
-      "Post-Approval Coupons for recipe kits",
-      "Sampling during festivals"
-    ],
-    "Entertainment": [
-      "Festive offers & event promos via PAC, Video Pop-up, DNB",
-      "Sponsor movie nights",
-      "Discover banners with seasonal content"
-    ],
-    "Water Treatment Services": [
-      "Health-benefit awareness via PAC + Video pop-ups",
-      "Community water quality events",
-      "Leaflet sampling in gift bags"
-    ],
-    "Food and Beverage Services": [
-      "Seasonal sampling + opt-in engagement",
-      "PAC + DNB for festive menu offers",
-      "Sponsor cultural food fests"
-    ],
-    "Fashion": [
-      "Digital launches: Video Pop-ups + PAC + Discover",
-      "Sampling + festive gift bag inserts",
-      "Sponsor cultural events (Garba, Navratri)"
-    ],
-    "Media Agency": [
-      "Festival campaign bundles (digital + BTL)",
-      "Lift & Gate festive takeovers + experiential",
-      "Event sponsorships and contests"
-    ],
-    "Car Detailing": [
-      "Festive-package promos via PAC + DNB",
-      "Sampling/gift packs in gift bags",
-      "Sponsor society meet-ups and demos"
-    ],
-    "Advertising Agencies": [
-      "Multi-client festival packages",
-      "Sponsored cultural events",
-      "Exclusive ad inventory reservation"
-    ],
-    "Home Services": [
-      "Festive discounts via PAC + Video ads",
-      "Sampling/leaflet inclusion in gift bags",
-      "Sponsor local society demos"
-    ],
-    "Food Delivery": [
-      "Flash sales via Video Pop-up + PAC",
-      "Sampling partner promos at food festivals",
-      "Sponsor cultural food celebrations"
-    ],
-    "Advertising": [
-      "Festival-themed awareness & conversion",
-      "Lift and gate branding campaigns",
-      "Sponsor community cultural events"
-    ],
-    "Facility Management": [
-      "Festive rate promos via DNB and PAC",
-      "On-ground cleaning product demos",
-      "Community safety workshops"
-    ]
-  }}
-</ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
+<ASSETS_TO_BE_PITCHED>
+{{
+  "Home Goods & Electronics": [
+    "Targeted Move-in / Move-out Cohort Outreach via PAC",
+    "Video Pop-up Ads with special offers or discounts focused on upcoming winters",
+    "Lift Branding + Christmas gift Bag Leaflet Inserts"
+  ],
+  "Education & Training": [
+    "Career Upgrade Workshops",
+    "Skill-based courses + PAC lead-gen + targeted DNB awareness",
+    "Promote early enrollments for professionals looking to advance their careers this year"
+  ],
+  "Manufacturing & Industrial": [
+    "Holiday Community Activation",
+    "Themed society events + PAC + gift bag offers",
+    "Limited-time offer + clear CTA"
+  ],
+  "Automotive & Transportation": [
+    "New Year, New Ride Promo",
+    "Test drives + geo-fenced PAC + premium gift hampers",
+    "driven by lower tax rates with GST benefits and the elimination of the old cess — making this the best time to upgrade."
+  ],
+  "Marketing, Advertising & Media": [
+    "Targeted digital campaigns (PAC + Video + DNB) for upcoming holiday season",
+    "Exclusive Lift & Gate Branding",
+    "Sponsor events and competitions within gated societies"
+  ],
+  "Hospitality & Travel": [
+    "Festive Staycation Offers",
+    "Targeted PAC promos + limited-time package bundles + gift vouchers",
+    "Highlight upcoming Christmas and New Year holidays with exclusive family getaway deals"
+  ],
+  "Apparel & Fashion": [
+    "Holiday Gifting and new Collection",
+    "Video reveals + lift branding + curated gift bundles in gift bags",
+    "Celebrate gifting seasons with pop-up experiences and limited-edition flavor collections"
+  ],
+  "Jewellery": [
+    "Timeless Gifting Collection",
+    "Video reveals + lift branding + curated jewellery showcases",
+    "Highlight meaningful gifting for weddings, anniversaries, and special milestones"
+  ],
+  "Retail": [
+    "Holiday Shopping Bonanza",
+    "Flash sales via PAC + curated Discover carousels + gift bag sampling",
+    "Limited-time coupons + 'Shop Now' CTA"
+  ],
+  "Healthcare & Wellness & Fitness": [
+    "Healthy Living Drive",
+    "Wellness camps + PAC awareness campaigns + DNB health reminders",
+    "Encourage preventive health check-ups and holistic wellness programs for all age groups"
+  ],
+  "Food & Beverage / FMCG": [
+    "Opt-in & Door-to-door Sampling + Christmas Gift Bag",
+    "Burst Video Pop-up + PAC campaigns",
+    "Sponsor cultural events and community kitchens"
+  ],
+  "Technology & Business Services": [
+    "Product Launch Acceleration",
+    "Demo webinars + gated community showcases + PAC lead capture",
+    "Engage potential partners with limited-time onboarding offers and integration trials"
+  ],
+  "Membership & Local Services": [
+    "Community Buzz Campaign",
+    "Society activations + PAC promotions + local sampling",
+    "Create grassroots visibility with minimal budgets and maximum engagement"
+  ],
+  "Beauty & Personal Care": [
+    "Holiday Gifting Collection",
+    "Video reveals + lift branding + curated gift bundles in gift bags",
+    "Encourage thoughtful self-care and meaningful gifting through premium skincare"
+  ],
+  "E-Commerce": [
+    "Holiday Shopping Bonanza",
+    "Flash sales via PAC + curated Discover carousels + gift bag sampling",
+    "Drive urgency with limited-time offers and doorstep sampling"
+  ],
+  "Real Estate & Construction": [
+    "Home For The Holidays Promo",
+    "Move-in cohorts + curated home-bundle offers + DNB tours",
+    "Showcase ready homes with attractive offers and easy booking support"
+  ],
+  "Finance & Fintech": [
+    "Year-End Financial Offers",
+    "PAC offers + themed workshops + DNB reminders for sign-ups",
+    "Promote tax-saving plans, loans, and insurance renewals before year-end"
+  ],
+  "Pets & Pet Services": [
+    "Festive Pet Treat Drive",
+    "Sample packs in gift bags + pet events + PAC promos",
+    "Engage pet parents with fun society events to build brand recall"
+  ],
+  "Energy, Renewables & Mining": [
+    "Seasonal Awareness & Offers",
+    "Community workshops + PAC educational bursts + DNB follow-ups",
+    "Highlight sustainability programs and energy-saving initiatives"
+  ],
+  "Entertainment & Gaming": [
+    "Festive Entertainment Packs",
+    "Limited-time bundles + community contests + DNB push",
+    "Promote gaming challenges and exclusive content drops to enhance engagement"
+  ],
+  "Logistics & Warehousing": [
+    "Holiday Express Promo",
+    "Express delivery offers + PAC + themed box inserts",
+    "Showcase reliable same-day deliveries and discounts to strengthen trust"
+  ],
+  "Education": [
+    "New Year Skill-Boost Workshops",
+    "Short courses + PAC lead-gen + early-bird DNB pushes",
+    "Encourage student enrollments with interactive modules and registration benefits"
+  ],
+  "Furniture": [
+    "Home For The Holidays Promo",
+    "Curated home-bundle offers + DNB tours",
+    "Showcase furniture collections with special setup packages"
+  ],
+  "Advertising Agencies": [
+    "Festive Product Boost",
+    "Demo webinars + gated community showcases + PAC lead capture",
+    "Highlight automation solutions through demos and real-world use cases"
+  ],
+  "Home Goods": [
+    "Gifting bundle promos via Discover & PAC",
+    "Sampling in gift bags",
+    "On-ground experiential activations"
+  ],
+  "Food Delivery": [
+    "Festive Flavor Pop-up Campaign",
+    "On-ground sampling + PAC video pop-ups + gift-bag recipe cards",
+    "Engage food enthusiasts with live cooking showcases"
+  ],
+  "Advertising": [
+    "Seasonal Awareness & Offers",
+    "Community workshops + PAC educational bursts + DNB follow-ups",
+    "Promote client awareness and highlight service benefits"
+  ],
+  "Hospitality": [
+    "Festive Flavor Pop-up Campaign",
+    "On-ground sampling + PAC video pop-ups + gift-bag recipe cards",
+    "Offer tasting experiences and limited-edition menu launches"
+  ],
+  "Fashion": [
+    "Holiday Gifting Collection",
+    "Video reveals + lift branding + curated gift bundles in gift bags",
+    "Showcase coordinated looks designed for effortless styling"
+  ],
+  "Marketing": [
+    "Seasonal Engagement Campaigns",
+    "Limited-time bundles + community contests + DNB push",
+    "Leverage content collaborations and brand activations"
+  ],
+  "Automotive": [
+    "New Year, New Ride Promo",
+    "Test drives + geo-fenced PAC + premium gift hampers",
+    "Highlight detailing offers and vehicle upkeep plans"
+  ],
+  "Media Agency": [
+    "Festive Campaign Bundle",
+    "Multi-channel PAC + lift/gate experiential + contest sponsorships",
+    "Promote integrated brand campaigns and creative collaborations"
+  ],
+  "Home Services": [
+    "Holiday Home Care Promo",
+    "Discounted service bundles + PAC + on-ground demos",
+    "Offer cleaning and maintenance packages to enhance living standards"
+  ]
+}}
+</ASSETS_TO_BE_PITCHED>
+
 
 <EMAIL>
   {email}
