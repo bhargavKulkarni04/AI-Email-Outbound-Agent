@@ -16,7 +16,7 @@ import fitz
 import requests
 from typing import Iterable, List, Optional, Tuple
 import html
-import tiktoken
+import tiktoken 
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -186,11 +186,10 @@ except Exception as e:
     print(f"Error configuring Gemini API: {e}")
 
 # Configuring OpenAI client
-
-#client = OpenAI()      #commenting bcz bhargav is using gemini
+client = OpenAI()
 
 master_sheet_id = "1xtB1KUAXJ6IKMQab0Sb0NJfQppCKLkUERZ4PMZlNfOw"
-brands_sheet_id = "1wSQh-5DXBAD0W2-9Blg1RtQ4berwnBcKnVAlxZLrlxU" #bhargav sheet id(revert back later)
+brands_sheet_id = "1YURPEVdgb9rOKENanL3lS3jkScEWFmFD6oOOXa-KDk" #bhargav sheet id(revert back later)
 
 master_data = read_data_from_sheets(sheets_service, master_sheet_id, "Meeting_data!A:AK")
 df_master = pd.DataFrame(master_data[1:], columns = master_data[0])
@@ -204,7 +203,7 @@ df_master = df_master.loc[mask].copy()
 prompt_template = """
 
 # Role
-You are Bhargav Kulkarni, a Business Development Representative for NoBrokerHood (NBH), NoBroker’s gated-community “society management” platform used by resident communities. NBH combines visitor/security management with resident apps, an admin dashboard for committees, and modules for billing, accounting, complaints, amenities, notices, classifieds/marketplace, and more. Your task is to pitch NBH advertising solutions through personalized emails to brands.
+You are Gautam Krishnamurthi, a Business Development Representative for NoBrokerHood (NBH), NoBroker’s gated-community “society management” platform used by resident communities. NBH combines visitor/security management with resident apps, an admin dashboard for committees, and modules for billing, accounting, complaints, amenities, notices, classifieds/marketplace, and more. Your task is to pitch NBH advertising solutions through personalized emails to brands and close deals.
 
 You will receive:
 - Brand name in <BRAND>…</BRAND>
@@ -213,11 +212,11 @@ You will receive:
 - Proposed industry in <INDUSTRY>…</INDUSTRY>
 - Prior meetings (same industry) in <PREVIOUS_MEETINGS>…</PREVIOUS_MEETINGS>
 - Case studies (same industry) in <CASE_STUDIES>…</CASE_STUDIES>
-- An asset menu in <ASSETS_TO_BE_PITCHED>…</ASSETS_TO_BE_PITCHED>
+- A festival-season asset menu in <ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>…</ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
 - A jargon glossary in <JARGON_GLOSSARY>…</JARGON_GLOSSARY>
 
 # Goal
-Write a **short, personalized, human-sounding cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable.
+Write a **short, personalized human-sounding festive-season cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable.
 
 # Allowed Industries
 [
@@ -232,7 +231,7 @@ Write a **short, personalized, human-sounding cold email** to <BRAND> that feels
 
 # Methodology
 - Read <PREVIOUS_MEETINGS> and <CASE_STUDIES> to understand **this industry’s needs**, which **NBH placements** fit best, and any **ROI/outcomes** mentioned.
-- Choose relevant **assets** from <ASSETS_TO_BE_PITCHED> that align to the brand and the industry needs.
+- Choose relevant **festival-season assets** from <ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON> that align to the brand and the industry needs.
 - **Name-drops:** Use brand names that NBH has worked with in the subject and email body. Only mention brands explicitly present in <PREVIOUS_MEETINGS> or <CASE_STUDIES>. If none fit, skip name-drops. Do not include brand which belongs to the same parent company as <BRAND>
 - **Glossary & phrasing:** Translate NBH internal terms with <JARGON_GLOSSARY>.
 - Use these friendly phrases where relevant (you can also think of similar phrases, no need to stick to these):
@@ -251,9 +250,8 @@ Write a **short, personalized, human-sounding cold email** to <BRAND> that feels
 
 # Style & Formatting (Plain Text Only)
 - **Plain text email**, no HTML except for the one link above.
-
-- The only formatting allowed is **bold emphasis** using `**...**` for short phrases.
-- Keep it natural: 1–2 brief paragraphs, optionally 1 tight bullet list (max 3 bullets).
+- The only formatting allowed is **bold emphasis** using `**...**` for short phrases and headings/titles.
+- Keep it natural: 2–3 brief paragraphs, optionally 1 tight bullet list (max 3 bullets).
 - Tone: crisp, helpful, outcomes-oriented; no hype; no emojis.
 - Include a single clear next step (e.g., share festive slots, 15-min chat, preferred societies).
 
@@ -271,8 +269,7 @@ If the industry match succeeds, output a pure JSON object with exactly:
 - **No hallucinations.** Do not invent brand names, ROI, placements, or timelines absent from inputs.
 - **Name-drops:** Only if present in <PREVIOUS_MEETINGS>/<CASE_STUDIES>. Never use the word “competitor”. Do not use brands belonging to the same parent company as <BRAND> e.g. Hotstar and JioHotstar
 - **ROI/Proof:** Mention only if present in inputs; keep it concise.
-
-- **Keep it short.** Target 70–90 words for the body.
+- **Keep it short.** Target 90–150 words for the body.
 
 # Final Output Constraints (Strict Rules)
 - Output must be a **pure JSON object** (no code fences, no extra commentary).
@@ -298,76 +295,55 @@ If the industry match succeeds, output a pure JSON object with exactly:
   {case_studies}
 </CASE_STUDIES>
 
-<ASSETS_TO_BE_PITCHED>
+<ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
   {{
     "Home Goods & Electronics": [
       "Targeted Move-in / Move-out Cohort Outreach via PAC",
-      "Video Pop-up Ads with offers or discounts",
-      "Lift Branding + Gift Bag Leaflet Inserts"
+      "Festival-focused Video Pop-up Ads with festival offers or discounts",
+      "Lift Branding + Festive Gift Bag Leaflet Inserts"
     ],
     "Education & Training": [
       "Sponsored cultural or festival celebration events in gated communities",
       "PAC lead gen campaigns for seasonal courses, workshops",
       "Festive Digital Notice Board push campaigns with early bird offers"
-      "Sponsored community events in gated communities",
-      "PAC lead gen campaigns for courses or workshops",
-      "Digital Notice Board push campaigns with early-bird offers"
     ],
     "Manufacturing & Industrial": [
       "Festival-themed sponsored educational content in forums",
-      "Sponsored educational content in community forums",
       "Targeted Move-in / Move-out Cohort Outreach via PAC",
       "Lead capture video pop-ups with festival logistics planning or safety tips"
-      "Lead capture video pop-ups with planning or safety tips"
     ],
     "Automotive & Transportation": [
       "Test Drive Festive Offers Campaign via PAC + Video Pop-ups",
-      "Test Drive Campaign via PAC + Video Pop-ups",
       "Location-Targeted Ads near competitor locations",
       "Geo-fenced Lift Branding + Gift Bag Leaflets in Premium Societies"
-      "Geo-fenced Lift Branding + Gift Bag Leaflets"
     ],
     "Marketing, Advertising & Media": [
       "Festival-targeted digital campaigns (PAC + Video + DNB)",
       "Exclusive Lift & Gate Branding with festive theming",
       "Sponsor festive events and competitions within gated societies"
-      "Targeted digital campaigns (PAC, Video, DNB)",
-      "Exclusive Lift & Gate Branding opportunities",
-      "Sponsor events and competitions in societies"
     ],
     "Hospitality & Travel": [
       "Festive booking promos via targeted PAC + DNB pushes",
       "Behavioral Cohort Targeting + PAC for Festival Stays/Bookings",
-      "Booking promos via targeted PAC + DNB pushes",
-      "Behavioral Cohort Targeting + PAC for Stays",
       "Gift Bag Leaflets in Premium Societies"
     ],
     "Apparel & Fashion": [
       "Festive digital product launches via Video Pop-up + Discover + PAC",
       "Lift Branding + coupon Inserts in Festival Gift Bags",
       "Sponsor cultural festivals for social storytelling"
-      "Digital product launches via Video Pop-up + Discover + PAC",
-      "Lift Branding + coupon Inserts in Gift Bags",
-      "Sponsor community events for social storytelling"
     ],
     "Jewellery": [
       "Festival-exclusive lift branding + coupon dispensers",
       "Video Pop-ups with festive-themed collection reveals",
       "Participate/sponsor society festive events"
-      "Exclusive lift branding with coupon dispensers",
-      "Video Pop-ups for new collection reveals",
-      "Participate or sponsor society events"
     ],
     "Retail": [
       "Proximity-targeted Festival Season PAC + Discover + DNB Campaigns",
-      "Proximity-targeted PAC, Discover, and DNB Campaigns",
       "Lift Branding + Leaflet Inserts in Gift Bags + Door Hanger Flyers",
       "Pre-festival Sampling and Flea Market Stalls"
-      "Product Sampling and community market stalls"
     ],
     "Healthcare & Wellness & Fitness": [
       "Festival wellness camps & health check booths",
-      "Wellness camps and health check booths",
       "Push campaigns on health supplements/product discounts",
       "PAC + Video Pop-ups for diet/fitness coaching"
     ],
@@ -375,57 +351,39 @@ If the industry match succeeds, output a pure JSON object with exactly:
       "Opt-in & Door-to-door Sampling + Festive Gift Bag Inserts",
       "Burst Video Pop-up + PAC campaigns during festive days",
       "Sponsor cultural festivals and community kitchens"
-      "Opt-in & Door-to-door Sampling + Gift Bag Inserts",
-      "Burst Video Pop-up + PAC campaigns",
-      "Sponsor community events and kitchens"
     ],
     "Technology & Business Services": [
       "Lead gen PAC + Festival event RSVP engagement",
       "DNB push campaigns with festive greetings + product bundles",
       "Sponsored gated community discussions/content"
-      "Lead gen PAC + event RSVP engagement",
-      "DNB push campaigns with product bundles",
-      "Sponsored community discussions/content"
     ],
     "Startups / Price-sensitive": [
       "Festival promo Discovery + PAC + light DNB burst",
-      "Discovery + PAC + light DNB burst campaigns",
       "Gift bag leaflet sponsorship with samples",
       "Sponsor selected festival nights with low-cost sampling"
-      "Sponsor events with low-cost sampling"
     ],
     "Beauty & Personal Care": [
       "Festival-time opt-in product sampling + PAC + coupons",
       "Video Pop-ups highlighting festive gift collections",
       "Sponsor Diwali/Garba experiential booths"
-      "Opt-in product sampling + PAC + coupons",
-      "Video Pop-ups highlighting gift collections",
-      "Sponsor community experiential booths"
     ],
     "E-Commerce": [
       "Festival flash sale promos via PAC + DNB",
       "Curated festive Discover carousels for gifting bundles",
-      "Flash sale promos via PAC and DNB",
-      "Curated Discover carousels for product bundles",
       "Sampling/leaflet distribution in gift bags"
     ],
     "Real Estate & Construction": [
       "Mover/renovator targeting using move-in/move-out cohorts",
       "Sponsored festival celebrations for brand goodwill",
       "Geo-fenced video tours and Discover banners with festive discounts"
-      "Sponsored community events for brand goodwill",
-      "Geo-fenced video tours and Discover banners with discounts"
     ],
     "Finance & Fintech": [
       "Festive loan/insurance offers via PAC and Video Pop-ups",
       "Sponsored festival events + festive-themed content",
-      "Loan/insurance offers via PAC and Video Pop-ups",
-      "Sponsored events and themed content",
       "DNB push campaigns with reminders"
     ],
     "Pets & Pet Services": [
       "Festive pet treat sampling in gated societies",
-      "Pet product sampling in gated societies",
       "PAC + Video Pop-up on pet care promotions",
       "Sponsor community pet events"
     ],
@@ -433,73 +391,54 @@ If the industry match succeeds, output a pure JSON object with exactly:
       "Festive sign-up drives via PAC and DNB",
       "On-ground festival event sponsorships",
       "Discover banners with seasonal packages"
-      "Sign-up drives via PAC and DNB",
-      "On-ground event sponsorships",
-      "Discover banners with service packages"
     ],
     "Energy, Renewables & Mining": [
       "Awareness & subsidy pushes via PAC and video pop-ups",
       "Energy-safety festivals/community events",
-      "Energy-safety workshops/community events",
       "Geo-fenced Discover banners for eco-friendly offers"
     ],
     "Entertainment & Gaming": [
       "Limited-time bundles via PAC + video pop-ups",
       "Sponsored community festivals and competitions",
-      "Sponsored community gaming events and competitions",
       "DNB push with curated entertainment content"
     ],
     "Logistics & Warehousing": [
       "Express delivery promos via PAC and DNB",
       "Festive-themed sampling (box inserts)",
       "Driver recognition/community goodwill festivals"
-      "Co-branded sampling (box inserts)",
-      "Driver recognition/community goodwill programs"
     ],
     "Quick Commerce": [
       "Flash sale bursts using Video Pop-up and PAC",
       "Sampling festive snack gift packs",
-      "Sampling snack or grocery packs",
       "DNB offer countdowns and reminders"
     ],
     "Education": [
       "Festival cultural event sponsorships",
       "PAC-based course registrations with festive discounts",
-      "Community event sponsorships",
-      "PAC-based course registrations with discounts",
       "DNB class/event reminders aligned to breaks"
     ],
     "Furniture": [
       "On-ground festival showcases & sampling",
       "PAC + Video Pop-up for festive discounts",
       "Leaflet inclusion in festive gift bags"
-      "On-ground product showcases & sampling",
-      "PAC + Video Pop-up for discounts",
-      "Leaflet inclusion in gift bags"
     ],
     "Automotive": [
       "Festival test drive & launch events with video and PAC",
-      "Test drive & launch events using video and PAC",
       "Digital geo-fencing bursts",
       "Festival sponsorship of cultural events"
-      "Sponsorship of community events"
     ],
     "Beauty": [
       "Opt-in sampling + festive PAC and coupons",
-      "Opt-in sampling + PAC and coupons",
       "Video Pop-ups showcasing gift sets",
       "Sponsor Diwali/Garba experiential booths"
-      "Sponsor community experiential booths"
     ],
     "Robotics": [
       "Product demos paired with PAC lead gen",
       "Sponsored tech showcases",
       "DNB push with festive offers"
-      "DNB push with offers"
     ],
     "Accounting Services": [
       "Festival tax-planning offers via PAC and DNB",
-      "Financial planning offers via PAC and DNB",
       "Community financial literacy events",
       "Video Pop-ups for appointment scheduling"
     ],
@@ -507,22 +446,16 @@ If the industry match succeeds, output a pure JSON object with exactly:
       "Gifting bundle promos via Discover & PAC",
       "Sampling in festive gift bags",
       "On-ground experiential activations"
-      "Sampling in gift bags",
-      "On-ground cooking/experiential activations"
     ],
     "Culinary Arts": [
       "Festival cooking contests collaboration",
-      "Community cooking contests collaboration",
       "Post-Approval Coupons for recipe kits",
       "Sampling during festivals"
-      "Sampling during community events"
     ],
     "Entertainment": [
       "Festive offers & event promos via PAC, Video Pop-up, DNB",
-      "Offers & event promos via PAC, Video Pop-up, DNB",
       "Sponsor movie nights",
       "Discover banners with seasonal content"
-      "Discover banners with curated content"
     ],
     "Water Treatment Services": [
       "Health-benefit awareness via PAC + Video pop-ups",
@@ -533,40 +466,29 @@ If the industry match succeeds, output a pure JSON object with exactly:
       "Seasonal sampling + opt-in engagement",
       "PAC + DNB for festive menu offers",
       "Sponsor cultural food fests"
-      "Product sampling + opt-in engagement",
-      "PAC + DNB for menu offers",
-      "Sponsor community food events"
     ],
     "Fashion": [
       "Digital launches: Video Pop-ups + PAC + Discover",
       "Sampling + festive gift bag inserts",
       "Sponsor cultural events (Garba, Navratri)"
-      "Sampling + gift bag inserts",
-      "Sponsor community events"
     ],
     "Media Agency": [
       "Festival campaign bundles (digital + BTL)",
       "Lift & Gate festive takeovers + experiential",
-      "Campaign bundles (digital + BTL)",
-      "Lift & Gate takeovers + experiential",
       "Event sponsorships and contests"
     ],
     "Car Detailing": [
       "Festive-package promos via PAC + DNB",
-      "Service package promos via PAC + DNB",
       "Sampling/gift packs in gift bags",
       "Sponsor society meet-ups and demos"
     ],
     "Advertising Agencies": [
       "Multi-client festival packages",
       "Sponsored cultural events",
-      "Multi-client packages",
-      "Sponsored community events",
       "Exclusive ad inventory reservation"
     ],
     "Home Services": [
       "Festive discounts via PAC + Video ads",
-      "Service discounts via PAC + Video ads",
       "Sampling/leaflet inclusion in gift bags",
       "Sponsor local society demos"
     ],
@@ -574,24 +496,19 @@ If the industry match succeeds, output a pure JSON object with exactly:
       "Flash sales via Video Pop-up + PAC",
       "Sampling partner promos at food festivals",
       "Sponsor cultural food celebrations"
-      "Sampling partner promos at food events",
-      "Sponsor community food celebrations"
     ],
     "Advertising": [
       "Festival-themed awareness & conversion",
-      "Brand awareness & conversion campaigns",
       "Lift and gate branding campaigns",
       "Sponsor community cultural events"
-      "Sponsor community events"
     ],
     "Facility Management": [
       "Festive rate promos via DNB and PAC",
-      "Service rate promos via DNB and PAC",
       "On-ground cleaning product demos",
       "Community safety workshops"
     ]
   }}
-</ASSETS_TO_BE_PITCHED>
+</ASSETS_TO_BE_PTCHED_FOR_FESTIVE_SEASON>
 
 <EMAIL>
   {email}
@@ -700,9 +617,9 @@ def get_gpt_response_json(
     input_tokens = len(enc.encode(prompt_json))
     try:
         # Ask the model for STRICT JSON (no code fences, no chatter)
-        resp = client.chat.completions.create(
+        resp = client.responses.create(
             model=model,
-            messages=[{"role": "user", "content": prompt_json}],
+            input=prompt_json,
             tools=tools  # or use a json_schema if you want a stricter contrac
         )
 
@@ -712,12 +629,12 @@ def get_gpt_response_json(
             # Fallback path (should rarely be needed)
             # Try to reconstruct from content parts if output_text is unavailable
             try:
-                parts = resp.choices[0].message.content  # SDK structure fallback
+                parts = resp.output[0].content[0].text  # SDK structure fallback
                 raw_text = parts
             except Exception:
                 raw_text = ""
 
-        # Clean up accidental fences if any
+        # Clean up accidental fences if any (shouldn’t appear with response_format)
         cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip(), flags=re.IGNORECASE)
 
         # Ensure it’s valid JSON; if so, re-dump to canonical string
@@ -804,10 +721,10 @@ def send_email(
     subject: str,
     body_text: str,
     body_html: Optional[str] = None,
-    sig_gif_path="unnamed.gif",
-    sig_name="Bhargav Kulkarni",
+    sig_gif_path = "unnamed.gif",
+    sig_name="Gautam Krishnamurthi",
     sig_title="Brand Partnerships & Alliances",
-    sig_phone="+91 8618818322",
+    sig_phone="+91 7676890529",
     sig_org="NoBrokerHood",
     attachments: Optional[List[str]] = None,
     cc: Optional[Iterable[str] | str] = None,
@@ -902,12 +819,8 @@ def main():
                 case_studies_selected.append(c)
         
         name = row["Client POC Name"]
-        email_str = row['Email']
-        if not email_str or not isinstance(email_str, str):
-            continue # Skip this row if email is missing
-        email = email_str.strip().split(',')
-        # result = get_gpt_response_json(brand_name, industry, previous_meeting_intelligence, email, case_studies_selected, "gpt-4-turbo", True, poc_name=name)
-        result = get_gemini_response_json(brand_name, industry, previous_meeting_intelligence, email, poc_name=name, case_studies=case_studies_selected) # Using Gemini
+        email = row['Email'].strip().split(',')
+        result = get_gpt_response_json(brand_name, industry, previous_meeting_intelligence, email, case_studies_selected, "gpt-5-mini", True, poc_name=name)
         out_token = len(enc.encode(result))
 
         sheet_index = i+2
@@ -949,3 +862,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
