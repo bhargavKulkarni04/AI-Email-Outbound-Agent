@@ -5,6 +5,7 @@ import os.path
 import time
 import base64
 import mimetypes
+import logging
 import traceback
 from email.mime.text import MIMEText
 from email.message import EmailMessage
@@ -190,13 +191,14 @@ except Exception as e:
 #client = OpenAI()      #commenting bcz bhargav is using gemini
 
 master_sheet_id = "1xtB1KUAXJ6IKMQab0Sb0NJfQppCKLkUERZ4PMZlNfOw"
-brands_sheet_id = "1knG6IgrVf-Uw884jK2XuffZtiZEmVV30MkP59pHxU6M" #bhargav sheet id(revert back later)
+brands_sheet_id = "1wSQh-5DXBAD0W2-9Blg1RtQ4berwnBcKnVAlxZLrlxU" #bhargav sheet id(revert back later)
 
 master_data = read_data_from_sheets(sheets_service, master_sheet_id, "Meeting_data!A:AK")
 df_master = pd.DataFrame(master_data[1:], columns = master_data[0])
 
 brand_data = read_data_from_sheets(sheets_service, brands_sheet_id, "Sheet7!A:P")
 df_brand = pd.DataFrame(brand_data[1:], columns = brand_data[0])
+print("DEBUG: DataFrame Columns:", df_brand.columns.tolist())
 
 mask = (df_master['Meeting Done'] == 'Conducted') & (df_master['Brand Size'].notna() & df_master['Brand Size'].astype("string").str.strip().ne(""))
 df_master = df_master.loc[mask].copy()
@@ -571,16 +573,33 @@ def get_gemini_response_json(brand_name, industry, previous_meetings, email, poc
     config = types.GenerateContentConfig(
         tools=[grounding_tool]
     )
-    
     try:
-        response = client.models.generate_content(model="gemini-2.5-flash",contents=prompt_json, config=config)
-        raw_text = response.candidates[0].content.parts[0].text
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt_json,
+            config=config
+        )
+
+        # ✅ Safety check before accessing Gemini response
+        if not response or not getattr(response, "candidates", None):
+            print(f"⚠️ Gemini returned no candidates for {brand_name} — skipping this brand.")
+            return None
+
+        candidate = response.candidates[0]
+        content = getattr(candidate, "content", None)
+        if not content or not getattr(content, "parts", None):
+            print(f"⚠️ Gemini returned empty content.parts for {brand_name} — skipping this brand.")
+            return None
+
+        raw_text = content.parts[0].text or ""
         cleaned_json_str = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
         return cleaned_json_str
-    
-    except genai.exceptions.GoogleGenAIError as e:
-        print(f"Google GenAI error: {e}")
+
+    except Exception as e:
+        print(f"Google GenAI error (or parsing error): {e}")
         return None
+
+   
     
 # Functions to generate email using OpenAI GPT
 def _to_jsonable(obj: Any) -> Any:
@@ -834,6 +853,8 @@ def main():
         email = email_str.strip().split(',')
         # result = get_gpt_response_json(brand_name, industry, previous_meeting_intelligence, email, case_studies_selected, "gpt-4-turbo", True, poc_name=name)
         result = get_gemini_response_json(brand_name, industry, previous_meeting_intelligence, email, poc_name=name, case_studies=case_studies_selected) # Using Gemini
+        if result is None:
+            continue
         out_token = len(enc.encode(result))
 
         sheet_index = i+2
