@@ -851,7 +851,7 @@ def main():
                 continue
             resp = send_email(gmail,email, email_subject, email_content, body_html = email_content_html,cc='brand.vmeet@nobroker.in' ,bcc='mrityunjay.pandey@nobroker.in')
             api_count += 1
-            if (api_count % 5) == 0:
+            if (api_count % 20) == 0:
                 print("Sleeping for 60 seconds to respect rate limits...")
                 time.sleep(60)
             sent_id = resp.get("id")
@@ -864,7 +864,7 @@ def main():
                 rng = f"Sheet7!P{sheet_index}:U{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data) 
                 sent_mail_count += 1
-                if sent_mail_count == 20:
+                if sent_mail_count == 50:
                     break    
         except Exception as e:
             print(f"Error sending email: {e}")
