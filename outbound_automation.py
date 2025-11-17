@@ -191,7 +191,7 @@ except Exception as e:
 #client = OpenAI()      #commenting bcz bhargav is using gemini
 
 master_sheet_id = "1xtB1KUAXJ6IKMQab0Sb0NJfQppCKLkUERZ4PMZlNfOw"
-brands_sheet_id = "1wSQh-5DXBAD0W2-9Blg1RtQ4berwnBcKnVAlxZLrlxU" #bhargav sheet id(revert back later)
+brands_sheet_id = "1knG6IgrVf-Uw884jK2XuffZtiZEmVV30MkP59pHxU6M" #bhargav sheet id(revert back later)
 
 master_data = read_data_from_sheets(sheets_service, master_sheet_id, "Meeting_data!A:AK")
 df_master = pd.DataFrame(master_data[1:], columns = master_data[0])
@@ -885,7 +885,7 @@ def main():
                 rng = f"Sheet7!P{sheet_index}:U{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data) 
                 sent_mail_count += 1
-                if sent_mail_count == 50:
+                if sent_mail_count == 500:
                     break    
         except Exception as e:
             print(f"Error sending email: {e}")
