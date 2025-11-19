@@ -219,7 +219,7 @@ You will receive:
 - A jargon glossary in <JARGON_GLOSSARY>…</JARGON_GLOSSARY>
 
 # Goal
-Write a **short, personalized, human-sounding cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable and include a light mention of the upcoming Christmas and New Year season.
+Write a **short, personalized, human-sounding cold email** to <BRAND> that feels like it was typed by a person (not a marketing flyer). Keep it concise and actionable and include a light mention of the upcoming Christmas and New Year season remembers these u should not use any words like festival in subject lines.
 
 # Allowed Industries
 [
@@ -885,7 +885,7 @@ def main():
                 rng = f"Sheet7!P{sheet_index}:U{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data) 
                 sent_mail_count += 1
-                if sent_mail_count == 500:
+                if sent_mail_count == 150:
                     break    
         except Exception as e:
             print(f"Error sending email: {e}")
