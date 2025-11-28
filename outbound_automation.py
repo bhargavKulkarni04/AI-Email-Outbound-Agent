@@ -177,7 +177,7 @@ def read_data_from_sheets(sheets_service, sheet_id, range):
 load_dotenv()
 
 # Configuring Gemini model
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDot2gEGtuljXRIkoathW4CIU6RBHwTldk")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBeyEkmnBeTAlHYhXpLotPyU1uG2zduDLw")
 try:
     client = genai.Client(api_key = GEMINI_API_KEY)
     # Using a specific model version. 1.5 Flash is faster and cheaper for many tasks.
@@ -573,53 +573,33 @@ def get_gemini_response_json(brand_name, industry, previous_meetings, email, poc
     config = types.GenerateContentConfig(
         tools=[grounding_tool]
     )
-    
-    max_retries = 5
-    backoff_factor = 2
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt_json,
+            config=config
+        )
 
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt_json,
-                config=config
-            )
+        # ✅ Safety check before accessing Gemini response
+        if not response or not getattr(response, "candidates", None):
+            print(f"⚠️ Gemini returned no candidates for {brand_name} — skipping this brand.")
+            return None
 
-            # ✅ Safety check before accessing Gemini response
-            if not response or not getattr(response, "candidates", None):
-                print(f"⚠️ Gemini returned no candidates for {brand_name} — skipping this brand.")
-                return None
+        candidate = response.candidates[0]
+        content = getattr(candidate, "content", None)
+        if not content or not getattr(content, "parts", None):
+            print(f"⚠️ Gemini returned empty content.parts for {brand_name} — skipping this brand.")
+            return None
 
-            candidate = response.candidates[0]
-            content = getattr(candidate, "content", None)
-            if not content or not getattr(content, "parts", None):
-                print(f"⚠️ Gemini returned empty content.parts for {brand_name} — skipping this brand.")
-                return None
+        raw_text = content.parts[0].text or ""
+        cleaned_json_str = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
+        return cleaned_json_str
 
-            raw_text = content.parts[0].text or ""
-            cleaned_json_str = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
-            return cleaned_json_str
+    except Exception as e:
+        print(f"Google GenAI error (or parsing error): {e}")
+        return None
 
-        except Exception as e:
-            error_str = str(e)
-            delay = 0
-
-            # Handle 429 RESOURCE_EXHAUSTED (Rate Limiting)
-            if "429" in error_str and "RESOURCE_EXHAUSTED" in error_str:
-                retry_match = re.search(r"Please retry in (\d+\.?\d*)s", error_str)
-                if retry_match:
-                    delay = float(retry_match.group(1)) + 1 # Add a small buffer
-                    print(f"Quota exceeded. API requested a delay of {delay:.2f}s. Retrying...")
-                else: # Fallback if regex fails
-                    delay = (backoff_factor ** (attempt + 1)) + 5
-                    print(f"Quota exceeded. Retrying in {delay} seconds...")
-            
-            # For any other error, or if max retries are reached, fail.
-            if delay == 0 or attempt >= max_retries - 1:
-                print(f"Google GenAI error after {attempt + 1} attempts: {e}")
-                return None
-            
-            time.sleep(delay)
+   
     
 # Functions to generate email using OpenAI GPT
 def _to_jsonable(obj: Any) -> Any:
@@ -865,11 +845,6 @@ def main():
         for c in case_studies:
             if c["Industry"] == industry:
                 case_studies_selected.append(c)
-            if c.get("Industry") == industry:
-                # Only add a case study if it has a non-empty ROI
-                if c.get("ROI"):
-                    case_studies_selected.append(c)
-        case_studies_selected = case_studies_selected[:5] # Limit to a maximum of 5 case studies
         
         name = row["Client POC Name"]
         email_str = row['Email']
@@ -910,7 +885,7 @@ def main():
                 rng = f"Sheet7!P{sheet_index}:U{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data) 
                 sent_mail_count += 1
-                if sent_mail_count == 200:
+                if sent_mail_count == 110:
                     break    
         except Exception as e:
             print(f"Error sending email: {e}")

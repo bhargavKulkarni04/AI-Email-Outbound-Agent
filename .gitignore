@@ -1,24 +1,6 @@
-# Python
-*.pyc
-*.pyo
-*.pyd
 __pycache__/
-venv/
-*.env
-env/
-.env.*
-
-# Secrets and Tokens - VERY IMPORTANT
-client_secret_755679980004-1a5eob1dph2lhhh9vt0n2edve2d6uf37.apps.googleusercontent.com.json
-client_secret.json
+*.pyc
 token.json
-
-# VS Code
-.vscode/
-
-# macOS
-.DS_Store
-
-#Jupyter Notebooks
-*.ipynb
-*.ipynb_checkpoints
+client_secret.json
+client_secret_*.json
+.env
