@@ -15,7 +15,7 @@ SCOPES = [
 ]
 
 # --- Google Sheet IDs ---
-SPREADSHEET_ID = "1knG6IgrVf-Uw884jK2XuffZtiZEmVV30MkP59pHxU6M"
+SPREADSHEET_ID = "1TCY56KQdQpQPbr0X7lLQmyg81i28j8VT_Dzn8gyVuOU"
 
 # The sheet containing master meeting data.
 MASTER_SHEET_ID = "16iIaSqupVvx0T5qkEJb2glZ6jYt37spAYcNawRe7nE8"

@@ -45,17 +45,28 @@ SCOPES = [
     'https://www.googleapis.com/auth/documents'
 ]
 
+# --- File Paths ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TOKEN_PATH = os.path.join(BASE_DIR, "token.json")
+CLIENT_SECRET_PATH = os.path.join(BASE_DIR, "client_secret.json")
+
 creds = None
-if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+if os.path.exists(TOKEN_PATH):
+    try:
+        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+    except Exception:
+        creds = None
 if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-    else:
+        try:
+            creds.refresh(Request())
+        except Exception:
+            creds = None
+    if not creds:
         # Put your downloaded OAuth client file here
-        flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
+        flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_PATH, SCOPES)
         creds = flow.run_local_server(port=0)
-    with open("token.json", "w") as f:
+    with open(TOKEN_PATH, "w") as f:
         f.write(creds.to_json())
 
 # Build gmail service
@@ -174,30 +185,45 @@ def read_data_from_sheets(sheets_service, sheet_id, range):
     except HttpError as error:
         print(f"An error occurred: {error}")    
 
-load_dotenv()
+# Load environment variables from .env file in the script's directory
+dotenv_path = os.path.join(BASE_DIR, '.env')
+load_dotenv(dotenv_path=dotenv_path)
 
-# Configuring Gemini model
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBeyEkmnBeTAlHYhXpLotPyU1uG2zduDLw")
+# --- Gemini API Configuration ---
+# Load the API key from environment variables.
+# The script will fail if the key is not found in the .env file or system environment.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 try:
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY not found in environment variables.")
     client = genai.Client(api_key = GEMINI_API_KEY)
-    # Using a specific model version. 1.5 Flash is faster and cheaper for many tasks.
-    # For higher quality, consider 'gemini-1.5-pro-latest'.
     print(f"Gemini model configured successfully.")
 except Exception as e:
     print(f"Error configuring Gemini API: {e}")
+    exit() # Stop the script if Gemini isn't configured
 
 # Configuring OpenAI client
 
 #client = OpenAI()      #commenting bcz bhargav is using gemini
 
-master_sheet_id = "1xtB1KUAXJ6IKMQab0Sb0NJfQppCKLkUERZ4PMZlNfOw"
+master_sheet_id = "1qh4S4jvz5MjJd1_XTDcmCSX5qye9EwTgPTeV-daizM0"
 brands_sheet_id = "1knG6IgrVf-Uw884jK2XuffZtiZEmVV30MkP59pHxU6M" #bhargav sheet id(revert back later)
 
 master_data = read_data_from_sheets(sheets_service, master_sheet_id, "Meeting_data!A:AK")
 df_master = pd.DataFrame(master_data[1:], columns = master_data[0])
 
-brand_data = read_data_from_sheets(sheets_service, brands_sheet_id, "Sheet7!A:P")
-df_brand = pd.DataFrame(brand_data[1:], columns = brand_data[0])
+brand_data = read_data_from_sheets(sheets_service, brands_sheet_id, "Sheet7!A:Z")
+
+# --- Robust DataFrame Creation ---
+# Pad rows that are shorter than the header row to prevent ValueError
+if brand_data:
+    header = brand_data[0]
+    num_columns = len(header)
+    data_rows = [row + [''] * (num_columns - len(row)) for row in brand_data[1:]]
+    df_brand = pd.DataFrame(data_rows, columns=header)
+else:
+    df_brand = pd.DataFrame() # Create an empty DataFrame if no data is found
+
 print("DEBUG: DataFrame Columns:", df_brand.columns.tolist())
 
 mask = (df_master['Meeting Done'] == 'Conducted') & (df_master['Brand Size'].notna() & df_master['Brand Size'].astype("string").str.strip().ne(""))
@@ -301,7 +327,50 @@ If the industry match succeeds, output a pure JSON object with exactly:
 </CASE_STUDIES>
 
 <ASSETS_TO_BE_PITCHED>
-{{
+  {assets_to_be_pitched}
+</ASSETS_TO_BE_PITCHED>
+
+
+<EMAIL>
+  {email}
+</EMAIL>
+
+<POC_NAME>
+  {poc_name}
+</POC_NAME>
+
+<JARGON_GLOSSARY>
+  {{
+    "PAC":"Post-Approval Screen Coupons / Lead Forms",
+    "PAC lead gen campaigns":"Post-Approval Screen Lead-Gen Campaigns",
+    "Post-approval card coupons":"Post-Approval Coupons",
+    "DNB":"Digital Notice Board (in-app announcements)",
+    "DNB push":"In-App Announcement Push Campaigns",
+    "Discover":"In-App Discovery Feed (carousel placements)",
+    "Discover carousels":"In-App Discovery Feed (carousel placements)",
+    "Discover banners":"In-App Discovery Banners",
+    "Video Pop-ups":"In-App Full-Screen Video Ads",
+    "Lift Branding":"Elevator Panel Branding",
+    "Gate Branding":"Society Gate Branding",
+    "Gift Bag Leaflet Inserts":"new year Gift Hamper Inserts (leaflets/samples)",
+    "Door-to-door hangers":"Door Hanger Flyers",
+    "Geo-fenced":"Location-Targeted (Geo-fenced) Ads",
+    "Proximity Targeted":"Location-Targeted Ads",
+    "Behavioral Cohort Targeting":"Audience Targeting by Behavior/Cohorts",
+    "Move-in / Move-out Cohort Outreach":"New-Mover / Move-Out Audience Targeting",
+    "RSVP engagement":"In-App Event RSVP Collection",
+    "BTL":"On-Ground Activations",
+    "Inventory locks":"Exclusive Ad Inventory Reservation",
+    "Digital burst":"Short High-Frequency Flight",
+
+    "Digital Takeover":"Digital placements (Video Pop-ups, Discover Banners, DNB pushes, PAC lead forms)",
+    "On-ground magic": "On-ground activations (Elevator/Gate Branding, Christmas Hamper Inserts & Sampling, society events)"
+
+  }}
+</JARGON_GLOSSARY>
+"""
+
+full_assets_menu = {
   "Home Goods & Electronics": [
     "Targeted Move-in / Move-out Cohort Outreach via PAC",
     "Video Pop-up Ads with special offers or discounts focused on upcoming winters",
@@ -516,178 +585,50 @@ If the industry match succeeds, output a pure JSON object with exactly:
     "Holiday Subscription Push via DNB and in-app banners",
     "Christmas/New Year binge campaign with curated content drops"
   ]
-}}
-</ASSETS_TO_BE_PITCHED>
+}
 
-
-<EMAIL>
-  {email}
-</EMAIL>
-
-<POC_NAME>
-  {poc_name}
-</POC_NAME>
-
-<JARGON_GLOSSARY>
-  {{
-    "PAC":"Post-Approval Screen Coupons / Lead Forms",
-    "PAC lead gen campaigns":"Post-Approval Screen Lead-Gen Campaigns",
-    "Post-approval card coupons":"Post-Approval Coupons",
-    "DNB":"Digital Notice Board (in-app announcements)",
-    "DNB push":"In-App Announcement Push Campaigns",
-    "Discover":"In-App Discovery Feed (carousel placements)",
-    "Discover carousels":"In-App Discovery Feed (carousel placements)",
-    "Discover banners":"In-App Discovery Banners",
-    "Video Pop-ups":"In-App Full-Screen Video Ads",
-    "Lift Branding":"Elevator Panel Branding",
-    "Gate Branding":"Society Gate Branding",
-    "Gift Bag Leaflet Inserts":"new year Gift Hamper Inserts (leaflets/samples)",
-    "Door-to-door hangers":"Door Hanger Flyers",
-    "Geo-fenced":"Location-Targeted (Geo-fenced) Ads",
-    "Proximity Targeted":"Location-Targeted Ads",
-    "Behavioral Cohort Targeting":"Audience Targeting by Behavior/Cohorts",
-    "Move-in / Move-out Cohort Outreach":"New-Mover / Move-Out Audience Targeting",
-    "RSVP engagement":"In-App Event RSVP Collection",
-    "BTL":"On-Ground Activations",
-    "Inventory locks":"Exclusive Ad Inventory Reservation",
-    "Digital burst":"Short High-Frequency Flight",
-
-    "Digital Takeover":"Digital placements (Video Pop-ups, Discover Banners, DNB pushes, PAC lead forms)",
-    "On-ground magic": "On-ground activations (Elevator/Gate Branding, Christmas Hamper Inserts & Sampling, society events)"
-
-  }}
-</JARGON_GLOSSARY>
-"""
-
-def get_gemini_response_json(brand_name, industry, previous_meetings, email, poc_name, case_studies):
+def get_gemini_response_json(brand_name, industry, previous_meetings, email, poc_name, case_studies, assets_to_be_pitched, max_retries=3):
     """Sends transcript text to Google Gemini API and retrieves raw insights text."""
 
     prompt_json = prompt_template.format(
-    brand_name = brand_name, industry = industry, previous_meetings = previous_meetings, email=email, case_studies=case_studies, poc_name=poc_name)
+    brand_name = brand_name, industry = industry, previous_meetings = previous_meetings, email=email, case_studies=case_studies, poc_name=poc_name, assets_to_be_pitched=assets_to_be_pitched)
     
-    grounding_tool = types.Tool(
-        google_search=types.GoogleSearch()
-    )
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash", # Using 1.5-flash as it's a good balance
+                contents=prompt_json,
+                # config is removed to disable web search
+            )
 
-    # Configure generation settings
-    config = types.GenerateContentConfig(
-        tools=[grounding_tool]
-    )
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt_json,
-            config=config
-        )
+            if not response or not getattr(response, "candidates", None):
+                print(f"⚠️ Gemini returned no candidates for {brand_name} — skipping this brand.")
+                return None
 
-        # ✅ Safety check before accessing Gemini response
-        if not response or not getattr(response, "candidates", None):
-            print(f"⚠️ Gemini returned no candidates for {brand_name} — skipping this brand.")
-            return None
+            candidate = response.candidates[0]
+            content = getattr(candidate, "content", None)
+            if not content or not getattr(content, "parts", None):
+                print(f"⚠️ Gemini returned empty content.parts for {brand_name} — skipping this brand.")
+                return None
 
-        candidate = response.candidates[0]
-        content = getattr(candidate, "content", None)
-        if not content or not getattr(content, "parts", None):
-            print(f"⚠️ Gemini returned empty content.parts for {brand_name} — skipping this brand.")
-            return None
+            raw_text = content.parts[0].text or ""
+            cleaned_json_str = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
+            return cleaned_json_str
 
-        raw_text = content.parts[0].text or ""
-        cleaned_json_str = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
-        return cleaned_json_str
-
-    except Exception as e:
-        print(f"Google GenAI error (or parsing error): {e}")
-        return None
-
-   
+        except Exception as e:
+            if "429" in str(e) and "RESOURCE_EXHAUSTED" in str(e):
+                print(f" Rate limit hit for {brand_name}. Waiting 5 seconds before trying next brand.")
+                time.sleep(5) # Wait for 5 seconds to respect rate limit before continuing
+                return None # Skip this brand
+            elif "EOF" in str(e) or "getaddrinfo failed" in str(e):
+                print(f"⚠️ Network error for {brand_name} on attempt {attempt}/{max_retries}: {e}. Retrying in 5 seconds...")
+                time.sleep(5) # Wait before retrying on network errors
+            else:
+                print(f"Google GenAI error (or parsing error) for {brand_name}: {e}")
+                return None # For non-rate-limit errors, fail immediately
     
-# Functions to generate email using OpenAI GPT
-def _to_jsonable(obj: Any) -> Any:
-    """
-    Best-effort conversion of common Python objects (e.g., pandas DataFrame)
-    into JSON-serializable structures.
-    """
-    # pandas DataFrame/Series support (duck-typed)
-    if hasattr(obj, "to_dict"):
-        try:
-            return obj.to_dict(orient="records")  # DataFrame
-        except TypeError:
-            return obj.to_dict()  # Series / generic mapping
-    # Already JSON-serializable primitives/containers
-    if isinstance(obj, (dict, list, str, int, float, bool)) or obj is None:
-        return obj
-    # Fallback: string-coerce
-    return str(obj)
-
-def get_gpt_response_json(
-    brand_name: str,
-    industry: str,
-    previous_meetings: Any,
-    email: str,
-    case_studies: Any,
-    model: str = "gpt-4.1-mini",
-    use_web_search: bool = True,
-    poc_name: str = "there",
-) -> Optional[str]:
-
-    # Render the prompt with your variables
-    prompt_json = prompt_template.format(
-        brand_name=brand_name,
-        industry=industry,
-        previous_meetings=previous_meetings,
-        email=email,
-        case_studies=case_studies,
-        poc_name=poc_name
-    )
-
-    # Build tool list (web grounding)
-    tools = [{"type": "web_search"}] if use_web_search else None
-    input_tokens = len(enc.encode(prompt_json))
-    try:
-        # Ask the model for STRICT JSON (no code fences, no chatter)
-        resp = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt_json}],
-            tools=tools  # or use a json_schema if you want a stricter contrac
-        )
-
-        # Preferred: resp.output_text contains the JSON when using response_format
-        raw_text = getattr(resp, "output_text", None)
-        if not raw_text:
-            # Fallback path (should rarely be needed)
-            # Try to reconstruct from content parts if output_text is unavailable
-            try:
-                parts = resp.choices[0].message.content  # SDK structure fallback
-                raw_text = parts
-            except Exception:
-                raw_text = ""
-
-        # Clean up accidental fences if any
-        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip(), flags=re.IGNORECASE)
-
-        # Ensure it’s valid JSON; if so, re-dump to canonical string
-        try:
-            parsed: Dict[str, Any] = json.loads(cleaned)
-            return json.dumps(parsed, ensure_ascii=False)
-        except json.JSONDecodeError:
-            # Last-ditch: extract first {...} or [...] chunk
-            m = re.search(r"(\{.*\}|\[.*\])", cleaned, flags=re.DOTALL)
-            if m:
-                try:
-                    parsed = json.loads(m.group(1))
-                    return json.dumps(parsed, ensure_ascii=False)
-                except Exception:
-                    pass
-            # Return whatever we got so caller can log/debug
-            return cleaned or None
-
-    except (BadRequestError, RateLimitError, APIError) as e:
-        print(f"OpenAI API error: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
-
+    print(f"❌ Skipping {brand_name} after failing to get response after {max_retries} retries.")
+    return None
 
 def text_to_minimal_html(text: str) -> str:
     ALLOWED_SCHEMES = ("http://", "https://", "mailto:")
@@ -779,6 +720,10 @@ def send_email(
     msg = EmailMessage()
     msg["Subject"] = subject
 
+    # Ensure the signature GIF path is absolute
+    if not os.path.isabs(sig_gif_path):
+        sig_gif_path = os.path.join(BASE_DIR, sig_gif_path)
+
     def _join(value):
         if value is None:
             return None
@@ -794,14 +739,17 @@ def send_email(
     if body_html:
         msg.add_alternative(full_html, subtype="html")
     html_part = msg.get_body(preferencelist=("html",))
-    with open(sig_gif_path, "rb") as f:
-        html_part.add_related(
-            f.read(),
-            maintype="image",
-            subtype="gif",     # or detect via mimetypes if you prefer
-            cid=sig_cid,        # referenced by src="cid:siggif"
-            filename = "NoBrokerHood Brand Partnerships"
-        )
+    if html_part and os.path.exists(sig_gif_path):
+        with open(sig_gif_path, "rb") as f:
+            html_part.add_related(
+                f.read(),
+                maintype="image",
+                subtype="gif",     # or detect via mimetypes if you prefer
+                cid=sig_cid,        # referenced by src="cid:siggif"
+                filename = "NoBrokerHood Brand Partnerships"
+            )
+    else:
+        print(f"⚠️ Warning: Signature image not found at {sig_gif_path}")
 
     # Add attachments
     for path in attachments or []:
@@ -822,20 +770,23 @@ def send_email(
 
 def main():
     
-    with open("case_studies.json", "r", encoding="utf-8") as f:
-      case_studies = json.load(f)
+    with open("case_studies.json", "r", encoding="utf-8") as f: # Corrected indentation
+        case_studies = json.load(f)
 
-    relevant_columns = ['Brand Name', 'Key Discussion Points', 'Key Questions', 'Action items', 'Marketing Assets', 'Customer Needs', 'Positive Factors', 'Closure Score', 'Pitch Rating', 'Client Pain Points', 'Overall Client Sentiment']
-    final_output = []
+    relevant_columns = ['Brand Name', 'Key Discussion Points', 'Key Questions', 'Action items', 'Marketing Assets', 'Customer Needs', 'Positive Factors', 'Closure Score', 'Pitch Rating', 'Client Pain Points', 'Overall Client Sentiment'] # Corrected indentation
+    final_output = [] # Corrected indentation
     api_count = 0
     sent_mail_count = 0
     for i, row in df_brand[:10000].iterrows():
+        # This will be wrapped in a try/finally block to ensure we always see a final message
         case_studies_selected = []
-        if row['Touched in last 3 months based on email domain'] == 'True':
-            continue
+        # More robust check: handles 'True', 'true', 'TRUE', etc.
+        touched_value = str(row.get('Touched in last 3 months based on email domain', 'False')).strip().lower()
+        if touched_value == 'true':
+            continue # Skip if already touched
         brand_name = row['Company / Brand Name']
         industry = row['top1_industry']
-        if industry == 'Other / Unknown':
+        if not industry or industry == 'Other / Unknown':
             industry = row['top2_industry']
         df_pm = df_master.loc[(df_master['Industry'] == industry)].copy()
         previous_meeting_intelligence = []
@@ -846,19 +797,42 @@ def main():
             if c["Industry"] == industry:
                 case_studies_selected.append(c)
         
+        # Get the specific assets for the current industry
+        assets_for_industry = full_assets_menu.get(industry, [])
+
         name = row["Client POC Name"]
         email_str = row['Email']
         if not email_str or not isinstance(email_str, str):
             continue # Skip this row if email is missing
         email = email_str.strip().split(',')
+        
+        # Clean up email addresses: split by comma, strip whitespace from each, and remove any empty entries.
+        email = [e.strip() for e in email_str.split(',') if e.strip()]
+
         # result = get_gpt_response_json(brand_name, industry, previous_meeting_intelligence, email, case_studies_selected, "gpt-4-turbo", True, poc_name=name)
-        result = get_gemini_response_json(brand_name, industry, previous_meeting_intelligence, email, poc_name=name, case_studies=case_studies_selected) # Using Gemini
+        result = get_gemini_response_json(brand_name, industry, previous_meeting_intelligence, email, poc_name=name, case_studies=case_studies_selected, assets_to_be_pitched=assets_for_industry) # Using Gemini
         if result is None:
+            # This happens if the Gemini API call itself fails (e.g., network error, 429 error)
+            print(f"Skipping {brand_name} because email content generation failed after retries.")
             continue
         out_token = len(enc.encode(result))
 
         sheet_index = i+2
 
+        try:
+            # Check if the response is a suggestion to change the industry
+            parsed_result = json.loads(result)
+            if "new_industry" in parsed_result:
+                new_industry = parsed_result["new_industry"]
+                print(f"Gemini suggested a new industry for {brand_name}: {new_industry}. Updating sheet.")
+                data = [["", "", "", "", "", out_token, f"Industry suggestion: {new_industry}"]]
+                rng = f"Sheet7!P{sheet_index}:V{sheet_index}"
+                write_data_into_sheets(sheets_service, brands_sheet_id, rng, data)
+                continue # Move to the next row
+        except (json.JSONDecodeError, TypeError):
+            # This is not a JSON response with a new_industry, which is the normal case.
+            # We can proceed to parse the email content.
+            pass
         
         try:
             email_subject = json.loads(result).get("subject", "")
@@ -866,15 +840,12 @@ def main():
             email_content_html = text_to_minimal_html(email_content) if email_content else None
             if not email_subject or not email_content_html:
                 print(f"Skipping email for {brand_name} due to missing subject or content.")
-                data = [["", f"{out_token}", f"{result}"]]
-                rng = f"Sheet7!T{sheet_index}:V{sheet_index}"
+                # Log the failure to generate content properly
+                data = [["False", "Email not sent", "", "", "", out_token, f"Missing subject/content from Gemini: {result}"]]
+                rng = f"Sheet7!P{sheet_index}:V{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data)
                 continue
-            resp = send_email(gmail,email, email_subject, email_content, body_html = email_content_html,cc='brand.vmeet@nobroker.in' ,bcc='mrityunjay.pandey@nobroker.in')
-            api_count += 1
-            if (api_count % 20) == 0:
-                print("Sleeping for 60 seconds to respect rate limits...")
-                time.sleep(60)
+            resp = send_email(gmail,email, email_subject, email_content, body_html = email_content_html,cc='brand.vmeet@nobroker.in')
             sent_id = resp.get("id")
             if not sent_id:
               data = [["False", "Email not sent", "", "", "", out_token]]
@@ -885,14 +856,23 @@ def main():
                 rng = f"Sheet7!P{sheet_index}:U{sheet_index}"
                 write_data_into_sheets(sheets_service, brands_sheet_id, rng, data) 
                 sent_mail_count += 1
-                if sent_mail_count == 110:
+                if sent_mail_count == 1000:
                     break    
         except Exception as e:
-            print(f"Error sending email: {e}")
-            data = [["True", "Email not sent", "", "", "" ,out_token,f"Error while sending email {e}"]]
+            # This block now correctly catches errors during JSON parsing or email sending
+            print(f"Error processing or sending email for {brand_name}: {e}")
+            data = [["False", "Email not sent", "", "", "" ,out_token,f"Error during processing/sending: {e}"]]
             rng = f"Sheet7!P{sheet_index}:V{sheet_index}"
             write_data_into_sheets(sheets_service, brands_sheet_id, rng, data)
 
-
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        print("\n✅ Script finished successfully.")
+    except Exception as e:
+        print(f"\n❌ An unexpected error stopped the script: {e}")
+        # Using traceback to get more detailed error information for debugging
+        import traceback
+        traceback.print_exc()
+    finally:
+        print("--- Execution complete. ---")

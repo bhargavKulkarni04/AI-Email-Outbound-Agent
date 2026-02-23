@@ -1,6 +1,7 @@
 import os
 import re
 import base64
+import sys
 from datetime import datetime, timedelta
 
 from google.auth.transport.requests import Request
@@ -116,10 +117,6 @@ def contains_signature(body_text):
     body_lower = body_text.lower()
     return any(marker in body_lower for marker in config.SIGNATURE_MARKERS)
 
-# =========================================================
-# =  MAIN SCRIPT LOGIC
-# =========================================================
-
 def main():
     """Main function to track replies and bounces."""
     print("Starting reply tracker...")
@@ -159,7 +156,11 @@ def main():
         print(f"Error accessing Google Sheet: {e}")
         return
 
-    query = "in:sent newer_than:8d"
+    days = "60d"
+    if len(sys.argv) > 1:
+        days = sys.argv[1]
+    
+    query = f"in:sent newer_than:{days}"
     try:
         sent_messages = []
         page_token = None
@@ -177,7 +178,7 @@ def main():
             if not page_token:
                 break
         
-        print(f"Found {len(sent_messages)} sent emails from the last 15 days to process.")
+        print(f"Found {len(sent_messages)} sent emails from the last {days} to process.")
     except HttpError as e:
         print(f"Error fetching emails from Gmail: {e}")
         return
@@ -238,20 +239,10 @@ def main():
                     bounce_found = True
                     break 
 
-                if from_email and from_email != to_email:
-                    reply_body = get_email_body(message['payload'])
-                    update_data['reply'] = True
-                    update_data['snippet'] = reply_body[:200]
-                    if contains_signature(reply_body):
-                         update_data['bounce_msg'] = config.SIGNATURE_TAG
-                    reply_count += 1
-                    reply_found = True
-                    break 
-            
-            if not bounce_found and not reply_found:
-                no_reply_count += 1
+            if bounce_found or update_data['error']:
+                updates_to_perform.append((row_num, update_data))
 
-            updates_to_perform.append((row_num, update_data))
+        except HttpError as e:
 
         except HttpError as e:
             print(f"Error processing thread {msg_summary.get('threadId', 'N/A')}: {e}")
@@ -269,13 +260,16 @@ def main():
             print(f"Processing chunk {i//chunk_size + 1}...")
 
             for row_num, data in chunk:
-                batch_update_data.extend([
-                    {'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Reply (T/F)'])}{row_num}", 'values': [[data['reply']]]},
-                    {'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Reply snippet'])}{row_num}", 'values': [[data['snippet']]]},
-                    {'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Wrong mail id msg'])}{row_num}", 'values': [[data['bounce_msg']]]},
-                    {'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Errors'])}{row_num}", 'values': [[data['error']]]},
-                    {'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['sent by'])}{row_num}", 'values': [["Bhargav"]]}
-                ])
+                if data['bounce_msg']:
+                    batch_update_data.append({
+                        'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Wrong mail id msg'])}{row_num}", 
+                        'values': [[data['bounce_msg']]]
+                    })
+                if data['error']:
+                    batch_update_data.append({
+                        'range': f"{config.REPLY_TRACKER_SHEET_NAME}!{chr(ord('A') + header_map['Errors'])}{row_num}", 
+                        'values': [[data['error']]]
+                    })
             
             try:
                 body = {'valueInputOption': 'USER_ENTERED', 'data': batch_update_data}
