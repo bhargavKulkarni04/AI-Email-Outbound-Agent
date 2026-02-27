@@ -243,8 +243,6 @@ def main():
                 updates_to_perform.append((row_num, update_data))
 
         except HttpError as e:
-
-        except HttpError as e:
             print(f"Error processing thread {msg_summary.get('threadId', 'N/A')}: {e}")
         except Exception as e:
             print(f"An unexpected error occurred for thread {msg_summary.get('threadId', 'N/A')}: {e}")

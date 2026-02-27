@@ -1,9 +1,28 @@
+
 """
-Central configuration file for the outbound automation project.
+Central configuration module for the NoBrokerHood Outbound Automation project.
+This file centralizes all paths, spreadsheet IDs, and business logic constants.
 """
 
-# --- Google API Scopes ---
-# Define the permission scopes needed for all scripts.
+import os
+from dotenv import load_dotenv
+
+# --- Path Configuration ---
+# Ensures all file paths are absolute and relative to this file's directory.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# --- Sensitive / Environment Data (from .env) ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "1Cx32uP3yiNa2tBQ1aBPHmBcd9jnkK88B01Kg3LnOI7I")
+MASTER_SHEET_ID = os.getenv("MASTER_SHEET_ID", "16iIaSqupVvx0T5qkEJb2glZ6jYt37spAYcNawRe7nE8")
+
+# --- Authentication Paths ---
+TOKEN_PATH = os.path.join(BASE_DIR, "token.json")
+CLIENT_SECRET_PATH = os.path.join(BASE_DIR, "client_secret.json")
+SIGNATURE_GIF_PATH = os.path.join(BASE_DIR, "unnamed.gif")
+
+# --- Google API Settings ---
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -14,20 +33,16 @@ SCOPES = [
     'https://www.googleapis.com/auth/documents'
 ]
 
-# --- Google Sheet IDs ---
-SPREADSHEET_ID = "1TCY56KQdQpQPbr0X7lLQmyg81i28j8VT_Dzn8gyVuOU"
+# --- Phase 2: Strategic Lead Settings ---
+MEETING_DATA_SHEET = "Meeting_data"
+MIN_MEETING_DURATION = 10  # Minutes
+PHASE2_FILTERS = {
+    "done_status": "Conducted",
+    "closure_exclude": "close"
+}
 
-# The sheet containing master meeting data.
-MASTER_SHEET_ID = "16iIaSqupVvx0T5qkEJb2glZ6jYt37spAYcNawRe7nE8"
-
-# --- Sheet Names / Ranges ---
-REPLY_TRACKER_SHEET_NAME = "Sheet7"   # For reply_tracker.py
-
-# --- Authentication File Paths ---
-TOKEN_PATH = "token.json"
-CLIENT_SECRET_PATH = "client_secret.json"
-
-# --- Reply Tracker Settings ---
+# --- Legacy / Reply Tracker Settings ---
+REPLY_TRACKER_SHEET = "Sheet7"
 SIGNATURE_MARKERS = [
     "bhargav kulkarni",
     "brand partnerships & alliances",
@@ -35,3 +50,7 @@ SIGNATURE_MARKERS = [
     "nobrokerhood"
 ]
 SIGNATURE_TAG = "| SentBy:Bhargav"
+
+# --- AI Model Settings ---
+PRIMARY_MODEL = "gemini-2.5-flash"
+IMAGE_MODEL = "gemini-3-pro-image-preview"
