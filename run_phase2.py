@@ -28,7 +28,7 @@ CC_EMAIL = "brand.vmeet@nobroker.in"  # Team CC for visibility
 # --- Test Mode ---
 # Set to True to send ALL emails to your own inbox instead of clients
 TEST_MODE = True
-TEST_EMAIL = ["bhargav.s@nobroker.in", "ajay.saini@nobroker.in", "sristi.agarwal@nobroker.in"]
+TEST_EMAIL = "bhargav.s@nobroker.in"
 
 
 def find_column(headers, keyword):
@@ -67,6 +67,7 @@ def main():
     idx_attendees = find_column(headers, "Client Attendees")
     idx_email_uuid = find_column(headers, "Email UUID")
     idx_title = find_column(headers, "Meeting Title")
+    idx_industry = find_column(headers, "Industry")
 
     if None in (idx_brand, idx_dur, idx_done, idx_cls, idx_doc, idx_attendees):
         print("[ERROR] Could not find required columns.")
@@ -79,6 +80,9 @@ def main():
     for i, row in enumerate(rows[1:], start=2):
         while len(row) < len(headers):
             row.append("")
+
+        if i < 5:  # Temporary skip to start from 4th lead (row 5)
+            continue
 
         # Apply filters
         try:
@@ -95,6 +99,7 @@ def main():
         brand = row[idx_brand]
         doc_url = row[idx_doc]
         attendees_raw = row[idx_attendees]
+        industry = row[idx_industry] if idx_industry is not None else None
 
         # --- Duplicate Protection ---
         if idx_email_uuid is not None and row[idx_email_uuid].strip():
@@ -116,7 +121,7 @@ def main():
 
         # Step 3b: Generate email + MOM
         print("[GEMINI] Generating MOM and follow-up...")
-        email_data = generate_email.generate(brand, attendees_raw, transcript)
+        email_data = generate_email.generate(brand, attendees_raw, transcript, industry=industry)
         if not email_data:
             print("   [SKIP] Gemini could not generate content.")
             continue
@@ -137,7 +142,12 @@ def main():
 
         # --- Test Mode Override ---
         meeting_title = row[idx_title] if idx_title is not None else brand
-        subject = email_data["subject"]
+        
+        # Handle new subject_options format (pick first one as default for automation)
+        if "subject_options" in email_data and email_data["subject_options"]:
+            subject = email_data["subject_options"][0]
+        else:
+            subject = email_data.get("subject", f"Follow up: {brand}")
 
         if TEST_MODE:
             to_emails = TEST_EMAIL if isinstance(TEST_EMAIL, list) else [TEST_EMAIL]

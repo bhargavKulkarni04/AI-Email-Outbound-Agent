@@ -7,6 +7,7 @@ Uses Gemini 2.5 Flash to create Follow-up email based on real meeting transcript
 import re
 import json
 import time
+import os
 from google import genai
 from google.genai import types
 import config
@@ -48,26 +49,42 @@ You have conducted a meeting and are writing a strategic follow-up email to {ful
 # STAGE 1: ANALYSIS
 Study the <TRANSCRIPT> and identify 3 key strategic alignments or pain points discussed.
 
-# STAGE 2: THE EMAIL (STRICT STRUCTURE)
-Write the email EXACTLY following this structure and wording for the intro:
+# STAGE 2: THE EMAIL (ULTRA-MINIMAL SOLUTION STRUCTURE)
+Generate the email content based on the <TRANSCRIPT> following these exact guidelines:
 
-Hi {full_client_name},
+1. SUBJECT OPTIONS: Provide 3 distinct, personalized subject line alternatives ( <50 chars, no spam words).
 
-NoBrokerHood connects brands directly with residents inside thousands of gated communities across India—a high-intent audience that engages actively with digital and on-ground campaigns. Given {brand_name}'s focus on innovative reach and driving consumer engagement, I thought our platform might be particularly interesting.
+2. EMAIL BODY (MINIMAL & DIRECT):
+   - GREETING: If {full_client_name} is "Client", start the email with "Hi,". If it is a real name, use "Hi {full_client_name},".
+   - OPENING (2 Lines): Summarize the core focus of our meeting and the specific brand objective we discussed for {brand_name}. Use the <TRANSCRIPT> to make this personal and direct (e.g., mention the specific city or problem discussed).
+   
+   - SOCIETY-FIRST SOLUTIONS (Select 2): Identify 2 key blockers or concerns from the <TRANSCRIPT> and map them to the most relevant titles from the menu below. Use THIS format (one per line):
+     - **Society-First Title** : [One-line solution using terms from JARGON_GLOSSARY]. (Keep the description concise and punchy).
 
-- [Strategic Point 1 from transcript]
-- [Strategic Point 2 from transcript]
-- [Strategic Point 3 from transcript]
+     SOCIETY-FIRST TITLE MENU (Select 2 most relevant):
+     - **Premium Society Customization** : Our platform allows us to bypass general city noise by filtering specific clusters with flat valuations above 2-3 Crores, ensuring your brand reaches only the most affluent resident owners.
+     - **High-Intent Resident Engagement** : Drive sales and conversion-focused offers via strategic Post Approval Card (PAC) notifications.
+     - **Society Cluster Performance** : We will establish clear performance metrics for your 30-day pilot across specific society tiers, validating high-efficiency acquisition.
+     - **Direct-to-Home Delivery Focus** : We leverage our Post-Approval Screen (PAC) to capture intent at the exact moment a resident expects a delivery, converting passive interest into direct sales.
+     - **Gate-to-Lift Branding Impact** : By synchronizing physical Gate Branding with high-visibility Elevator Panels, we create a continuous 360-degree presence for residents from the moment they enter the society until they reach their door.
+     - **Top-of-Mind Resident Presence** : Achieve consistent community-level brand recall through integrated in-society touchpoints.
 
-I wanted to show how {brand_name} would look in our premium societies.
+   - INDUSTRY PROOF: Use this EXACT sentence: "{relevant_study}".
 
-[Short professional CTA (e.g., Let me know when we can connect to discuss this further)]
+   - FINAL SECTION (DIVIDER BOX): You MUST include the section below exactly as formatted here:
+     ______________________________________________________________________________________________
+     Explore our offerings: <a href="https://www.canva.com/design/DAGfKxefahY/sg1k0ES4y3phNe_vE35hrQ/view?utm_content=DAGfKxefahY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h3fc1bc71be#1">NoBrokerHood Brand Partnerships</a>
 
-STRICT RULES:
-- NO signature at the end (No "Regards", "Sincerely", or "Best").
-- NO names at the end. The email MUST end right after the CTA.
-- DO NOT describe the assets (gate/lift) in the body text.
-- Use a simple "-" dash for bullets.
+     Let's schedule a 10-minute call next week to discuss the specific society clusters for your pilot.
+     ______________________________________________________________________________________________
+     
+     this is how **{brand_name}** looks in premium society
+
+3. STYLE GUIDELINES (STRICT):
+   - NO CORPORATE JARGON: NEVER use titles like "Audience Precision", "Direct Conversions", "Need for Direct Conversions", "Campaign Performance", or "Proving Pilot ROI".
+   - MINIMAL CONTENT: The entire email MUST be short and punchy. No generic fluff.
+   - DOUBLE SPACING: Use clear double-line breaks (empty lines) between the opening paragraph, the society solutions section, the industry proof line, and the action/closing section.
+   - NO SIGNATURE: The systems handles the signature. Do not include "Regards", "Best", or any name at the end.
 
 # IMAGE PROMPT RULES (3-IN-1 VERTICAL COMPOSITE)
 Create a highly realistic vertical collage image split into THREE distinct horizontal sections stacked top to bottom.
@@ -108,9 +125,9 @@ Each section must look like a candid smartphone photo taken inside a standard In
 # Output
 Return ONLY JSON:
 {{
-    "industry_analysis": "Short note",
-    "subject": "Strategic partnership subject line",
-    "email_body": "The email content starting from 'Hi' and ending at the CTA only. Do NOT include any signature or closing name here.",
+    "industry_analysis": "Short note about brand objectives",
+    "subject_options": ["Option 1", "Option 2", "Option 3"],
+    "email_body": "The minimal email content following the guidelines above exactly.",
     "image_prompt": "The detailed 3-panel high-realism vertical composite prompt"
 }}
 
@@ -129,7 +146,7 @@ def strip_gemini_signature(text):
         r"Bhargav Kulkarni.*",
         r"Brand Partnerships & Alliances.*",
         r"\+\d{1,3}\s?\d{10,12}.*",
-        r"---", r"__",
+        r"---",
     ]
     cleaned = text
     for pattern in signature_patterns:
@@ -140,7 +157,33 @@ def strip_gemini_signature(text):
             
     return cleaned
 
-def generate(brand_name, client_attendees, transcript_text, max_retries=3):
+def generate(brand_name, client_attendees, transcript_text, industry=None, max_retries=3):
+    # Load case studies
+    case_studies = []
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "case_studies.json"), "r") as f:
+            case_studies = json.load(f)
+    except Exception as e:
+        print(f"[ERROR] Could not load case_studies.json: {e}")
+
+    # Find a relevant case study
+    relevant_study = "We have partnered with similar premium brands to drive premium visibility and in-store footfall within our societies."
+    if industry:
+        # Try to find matches in our JSON or a fallback
+        brand_names = []
+        for s in case_studies:
+            if str(s.get("Industry")).lower() == industry.lower() and s.get("Brand"):
+                b_name = s.get("Brand").strip()
+                if b_name.lower() != brand_name.lower() and b_name not in brand_names:
+                    brand_names.append(b_name)
+                if len(brand_names) == 2:
+                    break
+        
+        if len(brand_names) == 2:
+            relevant_study = f"We have partnered with similar leading brands like {brand_names[0]} and {brand_names[1]} to drive premium visibility and in-store footfall within our societies."
+        elif len(brand_names) == 1:
+            relevant_study = f"We have partnered with similar leading brands like {brand_names[0]} to drive premium visibility and in-store footfall within our societies."
+
     # Extract name from attendees
     full_client_name = "Client"
     try:
@@ -149,7 +192,9 @@ def generate(brand_name, client_attendees, transcript_text, max_retries=3):
         if attendees:
             original_name = attendees[0]
             if "@" in original_name:
-                full_client_name = original_name.split("@")[0].replace(".", " ").title()
+                name_part = original_name.split("@")[0]
+                parts = re.split(r'[\._]', name_part)
+                full_client_name = " ".join([p.capitalize() for p in parts if p])
             else:
                 full_client_name = original_name
     except:
@@ -158,7 +203,8 @@ def generate(brand_name, client_attendees, transcript_text, max_retries=3):
     prompt = PROMPT_TEMPLATE.format(
         brand_name=brand_name,
         full_client_name=full_client_name,
-        transcript_text=transcript_text
+        transcript_text=transcript_text,
+        relevant_study=relevant_study
     )
 
     for attempt in range(1, max_retries + 1):
