@@ -52,11 +52,24 @@ Study the <TRANSCRIPT> and identify 3 key strategic alignments or pain points di
 # STAGE 2: THE EMAIL (ULTRA-MINIMAL SOLUTION STRUCTURE)
 Generate the email content based on the <TRANSCRIPT> following these exact guidelines:
 
-1. SUBJECT OPTIONS: Provide 3 distinct, personalized subject line alternatives ( <50 chars, no spam words).
+1. SUBJECT: Provide exactly ONE high-impact subject line. Do not use spam words. You MUST draw inspiration from or use one of these best-practice styles:
+      - "Capturing the resident journey: Re-imagining {brand_name}’s presence from gate to door"
+      - "Dominating the daily flow: A 360-degree society branding strategy for {brand_name}"
+      - "Bringing {brand_name} to life inside India's most premium gated communities"
+      - "Beyond the city noise: Engaging {brand_name} with homeowners at the point of intent"
+      - "Precision targeting: Taking {brand_name} directly to the residents of elite society clusters"
+      - "Building long-term community recall for {brand_name} within high-intent resident apps"
+      - "A first look: How {brand_name} integrates into our premium lift and gate inventory"
+      - "Next steps for the {brand_name} pilot: Mapping the roadmap for direct resident engagement"
+      - "Meeting {brand_name} halfway: Integrating into the residents' daily home-delivery journey"
+      - "Direct-to-home visibility: Why {brand_name} belongs inside the resident's daily lifestyle"
+      - "Precision targeting: Taking {brand_name} directly to the residents of elite society clusters"
+      - "Building long-term community recall for {brand_name} within high-intent resident apps"
+      - "Dominating the gate-to-lift journey: A 360-degree branding strategy for {brand_name}"
 
 2. EMAIL BODY (MINIMAL & DIRECT):
    - GREETING: If {full_client_name} is "Client", start the email with "Hi,". If it is a real name, use "Hi {full_client_name},".
-   - OPENING (2 Lines): Summarize the core focus of our meeting and the specific brand objective we discussed for {brand_name}. Use the <TRANSCRIPT> to make this personal and direct (e.g., mention the specific city or problem discussed).
+   - OPENING (3 Lines): Jump directly into what was discussed in the meeting. Pull 3 specific points from the <TRANSCRIPT> — mention the exact product, city, problem, or strategy that was talked about. Do NOT use generic phrases like 'great discussion', 'insightful conversation', 'productive meeting', 'was insightful', 'Thank you for your time'. Start with something like 'Our discussion on identifying the right society clusters for {brand_name} in [city]...' and continue for 3 lines with real meeting details.
    
    - SOCIETY-FIRST SOLUTIONS (Select 2): Identify 2 key blockers or concerns from the <TRANSCRIPT> and map them to the most relevant titles from the menu below. Use THIS format (one per line):
      - **Society-First Title** : [One-line solution using terms from JARGON_GLOSSARY]. (Keep the description concise and punchy).
@@ -72,11 +85,11 @@ Generate the email content based on the <TRANSCRIPT> following these exact guide
    - INDUSTRY PROOF: Use this EXACT sentence: "{relevant_study}".
 
    - FINAL SECTION (DIVIDER BOX): You MUST include the section below exactly as formatted here:
-     ______________________________________________________________________________________________
+     ________________________________________________
      Explore our offerings: <a href="https://www.canva.com/design/DAGfKxefahY/sg1k0ES4y3phNe_vE35hrQ/view?utm_content=DAGfKxefahY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h3fc1bc71be#1">NoBrokerHood Brand Partnerships</a>
 
      Let's schedule a 10-minute call next week to discuss the specific society clusters for your pilot.
-     ______________________________________________________________________________________________
+     ________________________________________________
      
      this is how **{brand_name}** looks in premium society
 
@@ -126,7 +139,7 @@ Each section must look like a candid smartphone photo taken inside a standard In
 Return ONLY JSON:
 {{
     "industry_analysis": "Short note about brand objectives",
-    "subject_options": ["Option 1", "Option 2", "Option 3"],
+    "subject": "The single high-impact subject line following the guidelines above exactly.",
     "email_body": "The minimal email content following the guidelines above exactly.",
     "image_prompt": "The detailed 3-panel high-realism vertical composite prompt"
 }}
@@ -180,9 +193,9 @@ def generate(brand_name, client_attendees, transcript_text, industry=None, max_r
                     break
         
         if len(brand_names) == 2:
-            relevant_study = f"We have partnered with similar leading brands like {brand_names[0]} and {brand_names[1]} to drive premium visibility and in-store footfall within our societies."
+            relevant_study = f"We have partnered with similar leading brands like **{brand_names[0]}** and **{brand_names[1]}** to drive premium visibility and in-store footfall within our societies."
         elif len(brand_names) == 1:
-            relevant_study = f"We have partnered with similar leading brands like {brand_names[0]} to drive premium visibility and in-store footfall within our societies."
+            relevant_study = f"We have partnered with similar leading brands like **{brand_names[0]}** to drive premium visibility and in-store footfall within our societies."
 
     # Extract name from attendees
     full_client_name = "Client"

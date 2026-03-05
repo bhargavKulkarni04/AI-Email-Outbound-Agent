@@ -14,7 +14,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # --- Sensitive / Environment Data (from .env) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "1Cx32uP3yiNa2tBQ1aBPHmBcd9jnkK88B01Kg3LnOI7I")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "13qHFawkKa16oDcrWDOam23Dvf5LFaEo6cYRY9kJ0tXw")
 MASTER_SHEET_ID = os.getenv("MASTER_SHEET_ID", "16iIaSqupVvx0T5qkEJb2glZ6jYt37spAYcNawRe7nE8")
 
 # --- Authentication Paths ---
